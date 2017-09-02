@@ -1,0 +1,9 @@
+# .pickle files
+.pickle
+
+# rendered images
+.svg
+.png
+
+# Python
+__pycache__
