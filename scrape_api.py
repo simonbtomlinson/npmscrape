@@ -8,6 +8,8 @@ from collections import namedtuple
 import networkx as nx
 import pickle
 
+from lxml import html
+
 ScrapedResult = namedtuple('ScrapedResult', ['name', 'dependencies', 'dev_dependencies'])
 
 
@@ -66,15 +68,27 @@ def scrape_all_dependencies(*packages):
             nested_deps = (itertools.chain(s.dependencies) for s in scraped)
             to_scrape = {dep for dep in itertools.chain(*nested_deps) if dep not in found}
             for s in scraped:
+                graph.add_node(s.name)
                 for d in s.dependencies:
                     graph.add_edge(s.name, d, attr_dict={'type': 'dependency'})
-                for d in s.dev_dependencies:
-                    graph.add_edge(s.name, d, attr_dict={'type': 'dev_dependency'})
                 if s.name not in found:
                     found.add(s.name)
     return graph
 
-from scrape_most_depended_upon import get_depended_upon_packages
-graph = scrape_all_dependencies(*get_depended_upon_packages())
-with open('top-packages-no-dev.pickle', 'wb') as pickle_file:
+
+def parse_int_with_commas(int_str):
+    return int(''.join(filter(lambda c: c in '0123456789', int_str)))
+
+
+def scrape_num_daily_downloads(package_name):
+    resp = requests.get(f'https://www.npmjs.com/package/{package_name}')
+    assert resp.ok
+    tree = html.fromstring(resp.content)
+    daily_downloads_text = tree.cssselect('.daily-downloads')[0].text_content()
+    return parse_int_with_commas(daily_downloads_text)
+
+
+from scrape_most_depended_upon import get_first_n_depended_upon_packages
+graph = scrape_all_dependencies(*get_first_n_depended_upon_packages(36))
+with open('top-36-packages-no-dev.pickle', 'wb') as pickle_file:
     pickle.dump(graph, pickle_file)
