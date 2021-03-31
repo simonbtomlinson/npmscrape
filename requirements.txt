@@ -5,7 +5,7 @@ decorator==4.1.2
 graphviz==0.8
 greenlet==0.4.12
 idna==2.6
-lxml==3.8.0
+lxml==4.6.3
 networkx==1.11
 pkg-resources==0.0.0
 requests==2.18.4
